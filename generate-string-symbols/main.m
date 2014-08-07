@@ -80,6 +80,16 @@ int main(int argc, const char * argv[])
             [fileContents appendString:[NSString stringWithFormat:@"static const char *%@ = \"%@\";\n", key, key]];
         }
 
+        NSString *parentPath = [outputFilePath stringByDeletingLastPathComponent];
+        if (![[NSFileManager defaultManager] fileExistsAtPath:parentPath]) {
+            if (![[NSFileManager defaultManager] createDirectoryAtPath:parentPath
+                                           withIntermediateDirectories:YES
+                                                            attributes:nil
+                                                                 error:&error]) {
+                printf("ERROR: Creating parent directory failed with error: %s\n", error.localizedDescription.UTF8String);
+                exit(EXIT_FAILURE);
+            }
+        }
 
         if (![fileContents writeToFile:outputFilePath atomically:YES encoding:NSUTF8StringEncoding error:&error]) {
             printf("ERROR: Writing output file failed with error: %s\n", error.localizedDescription.UTF8String);
