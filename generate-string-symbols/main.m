@@ -77,7 +77,7 @@ int main(int argc, const char * argv[])
         [fileContents appendString:@"#import <Foundation/Foundation.h>\n\n"];
 
         for (NSString *key in plist) {
-            [fileContents appendString:[NSString stringWithFormat:@"static const char *%@ = \"%@\";\n", key, key]];
+            [fileContents appendString:[NSString stringWithFormat:@"static NSString * const %@ = @\"%@\";\n", key, key]];
         }
 
         NSString *parentPath = [outputFilePath stringByDeletingLastPathComponent];
