@@ -6,6 +6,8 @@ files. Combined with a custom build step in your Xcode project and a bit of macr
 magic, it can be used to automatically give compile-time checked keys for your
 localised strings.
 
+You can find a discussion on this over on [my blog](http://ikennd.ac/blog/2014/08/nslocalizedstring/).
+
 ## License ##
 
 `generate-string-symbols` is licensed under three-clause BSD. The license document can be
