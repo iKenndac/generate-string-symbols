@@ -15,13 +15,21 @@ void printUsage() {
 
     printf("%s by Daniel Kennett\n\n", processName.UTF8String);
 
-    printf("Outputs a header file containing symbols for the give .strings\n");
+    printf("Outputs a header file containing symbols for the given .strings\n");
     printf("file's keys.\n\n");
 
-    printf("Usage: %s -out <output file path> \n", processName.UTF8String);
-    printf("       %s -strings <strings file path>\n", [@"" stringByPaddingToLength:processName.length
-                                                                         withString:@" "
-                                                                    startingAtIndex:0].UTF8String);
+    printf("Usage: %s -strings <strings file path>\n", processName.UTF8String);
+    printf("       %s -out <output file path> \n\n", [@"" stringByPaddingToLength:processName.length
+                                                                     withString:@" "
+                                                                startingAtIndex:0].UTF8String);
+
+    printf("  -strings  The path to a valid .strings file.\n\n");
+
+    printf("  -out      The path to write the output header file to. Missing\n");
+    printf("            directories will be created along the way. If a file\n");
+    printf("            already exists at the given path, it will be\n");
+    printf("            overwritten.");
+
     printf("\n\n");
 }
 
