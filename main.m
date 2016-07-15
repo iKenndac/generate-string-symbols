@@ -12,6 +12,9 @@
 void printUsage() {
 
     NSString *processName = [[NSProcessInfo processInfo] processName];
+    NSString *processNamePadding = [@"" stringByPaddingToLength:processName.length
+                                                     withString:@" "
+                                                startingAtIndex:0];
 
     printf("%s by Daniel Kennett\n\n", processName.UTF8String);
 
@@ -19,16 +22,20 @@ void printUsage() {
     printf("file's keys.\n\n");
 
     printf("Usage: %s -strings <strings file path>\n", processName.UTF8String);
-    printf("       %s -out <output file path> \n\n", [@"" stringByPaddingToLength:processName.length
-                                                                     withString:@" "
-                                                                startingAtIndex:0].UTF8String);
+    printf("       %s -out <output file path> \n", processNamePadding.UTF8String);
+    printf("       %s -skipwriteifunchanged <YES/NO> \n\n", processNamePadding.UTF8String);
 
     printf("  -strings  The path to a valid .strings file.\n\n");
 
     printf("  -out      The path to write the output header file to. Missing\n");
     printf("            directories will be created along the way. If a file\n");
     printf("            already exists at the given path, it will be\n");
-    printf("            overwritten.");
+    printf("            overwritten.\n\n");
+
+    printf("  -skipwriteifunchanged   Pass YES to this to skip output writing\n");
+    printf("                          if a file already exists at -out with\n");
+    printf("                          the same contents as would be written.");
+
 
     printf("\n\n");
 }
@@ -42,6 +49,9 @@ int main(int argc, const char * argv[])
 
         NSString *inputFilePath = [[NSUserDefaults standardUserDefaults] valueForKey:@"strings"];
         NSString *outputFilePath = [[NSUserDefaults standardUserDefaults] valueForKey:@"out"];
+        BOOL skipWriteIfUnchanged = [[NSUserDefaults standardUserDefaults] boolForKey:@"skipwriteifunchanged"];
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+
 
         setbuf(stdout, NULL);
 
@@ -50,7 +60,7 @@ int main(int argc, const char * argv[])
             exit(EXIT_FAILURE);
         }
 
-        if (![[NSFileManager defaultManager] fileExistsAtPath:inputFilePath]) {
+        if (![fileManager fileExistsAtPath:inputFilePath]) {
             printf("ERROR: Input file %s doesn't exist.\n", [inputFilePath UTF8String]);
             exit(EXIT_FAILURE);
         }
@@ -96,17 +106,28 @@ int main(int argc, const char * argv[])
         }
 
         NSString *parentPath = [outputFilePath stringByDeletingLastPathComponent];
-        if (![[NSFileManager defaultManager] fileExistsAtPath:parentPath]) {
-            if (![[NSFileManager defaultManager] createDirectoryAtPath:parentPath
-                                           withIntermediateDirectories:YES
-                                                            attributes:nil
-                                                                 error:&error]) {
+        if (![fileManager fileExistsAtPath:parentPath]) {
+            if (![fileManager createDirectoryAtPath:parentPath
+                        withIntermediateDirectories:YES
+                                         attributes:nil
+                                              error:&error]) {
                 printf("ERROR: Creating parent directory failed with error: %s\n", error.localizedDescription.UTF8String);
                 exit(EXIT_FAILURE);
             }
         }
 
-        if (![fileContents writeToFile:outputFilePath atomically:YES encoding:NSUTF8StringEncoding error:&error]) {
+        NSData *dataToWrite = [fileContents dataUsingEncoding:NSUTF8StringEncoding];
+
+        if (skipWriteIfUnchanged && [fileManager fileExistsAtPath:outputFilePath]) {
+            NSData *existingData = [NSData dataWithContentsOfFile:outputFilePath];
+
+            if (existingData != nil && [dataToWrite isEqual:existingData]) {
+                printf("File already exists at -out with the same contents as we'd write. Skipping.\n");
+                exit(EXIT_SUCCESS);
+            }
+        }
+
+        if (![dataToWrite writeToFile:outputFilePath options:NSDataWritingAtomic error:&error]) {
             printf("ERROR: Writing output file failed with error: %s\n", error.localizedDescription.UTF8String);
             exit(EXIT_FAILURE);
         }
